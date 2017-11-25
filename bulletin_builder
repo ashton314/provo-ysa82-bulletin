@@ -9,8 +9,218 @@ get '/' => sub {
   $c->render(template => 'index');
 };
 
+get '/builder' => sub {
+  my $c = shift;
+  $c->render(template => 'builder');
+};
+
 app->start;
 __DATA__
+
+@@ builder.html.ep
+% layout 'default';
+% title 'Bulletin Builder';
+
+<h1>Program Builder</h1>
+
+<form action="/build-bulletin" class="mb-3">
+  <h3>Meta Data</h3>
+  <div class="form-group">
+    <label>Meeting Type</label>
+    <select name="meeting-type" class="custom-select">
+      <option value="Sacrament Meeting">Sacrament Meeting</option>
+      <option value="Fast and Testimony Meeting">Fast and Testimony Meeting</option>
+    </select>
+  </div>
+
+  <div class="form-group">
+    <h3>Leading</h3>
+    <label for="conducting">Conducting</label>
+    <input name="conducting" type="text" class="form-control" placeholder="Bishop Anson">
+    <label for="presiding">Presiding</label>
+    <input name="presiding" type="text" class="form-control" placeholder="Bishop Anson">
+    <hr>
+    <label for="chorister">Chorister</label>
+    <input name="chorister" type="text" class="form-control" placeholder="Jessie Knight">
+    <label for="presiding">Pianist</label>
+    <input name="presiding" type="text" class="form-control" placeholder="Hyrum Page">
+  </div>
+
+  <h3>Program</h3>
+
+  <div class="form-inline my-1">
+    <label for="opening-hymn-number" class="col-2">Opening Hymn</label>
+    <input name="opening-hymn-number" type="number" class="form-control col-1 mr-auto" placeholder="68">
+    <input name="opening-hymn" type="text" class="form-control col-8" placeholder="A Mighty Fortress Is Our God">
+  </div>
+
+  <div class="form-inline my-1">
+    <label for="sacrament-hymn-number" class="col-2">Sacrament Hymn</label>
+    <input name="sacrament-hymn-number" type="number" class="form-control col-1 mr-auto" placeholder="197">
+    <input name="sacrament-hymn" type="text" class="form-control col-8" placeholder="O Savior, Thou Who Wearest a Crown">
+  </div>
+
+  <div class="form-inline my-1">
+    <div class="form-check col-auto">
+      <label class="form-check-label">
+	Display Speaker&nbsp;<input name="include-speaker-1" type="checkbox" class="form-check-input">
+      </label>
+    </div>
+    <input name="speaker-1" type="text" class="form-control col">
+  </div>
+  <div class="form-inline my-1">
+    <div class="form-check col-auto">
+      <label class="form-check-label">
+	Display Speaker&nbsp;<input name="include-speaker-2" type="checkbox" class="form-check-input">
+      </label>
+    </div>
+    <input name="speaker-2" type="text" class="form-control col">
+  </div>
+  <div class="form-inline my-1">
+    <div class="form-check col-auto">
+      <label class="form-check-label">
+	Display Speaker&nbsp;<input name="include-speaker-3" type="checkbox" class="form-check-input">
+      </label>
+    </div>
+    <input name="speaker-3" type="text" class="form-control col">
+  </div>
+
+  <div class="form-inline my-1">
+    <label for="rest-hymn-number" class="form-check-label col-2">
+      Rest Hymn&nbsp;<input name="include-rest-hymn" type="checkbox" class="form-check-input">
+    </label>
+    <input name="rest-hymn-number" type="number" class="form-control col-1 mr-auto" placeholder="">
+    <input name="rest-hymn" type="text" class="form-control col-8" placeholder="">
+  </div>
+
+  <div class="form-inline my-1">
+    <label for="musical-number" class="form-check-label col-2">
+      Musical Number&nbsp;<input name="include-musical-number" type="checkbox" class="form-check-input">
+    </label>
+    <input name="musical-number" type="text" class="form-control col-4 mr-auto" placeholder="(Song title here)">
+    <input name="musical-number-player" type="text" class="form-control col-5" placeholder="(Musician name here)">
+  </div>
+
+  <div class="form-inline my-1">
+    <div class="form-check col-auto">
+      <label class="form-check-label">
+	Display Speaker&nbsp;<input name="include-speaker-4" type="checkbox" class="form-check-input">
+      </label>
+    </div>
+    <input name="speaker-4" type="text" class="form-control col">
+  </div>
+  <div class="form-inline my-1">
+    <div class="form-check col-auto">
+      <label class="form-check-label">
+	Display Speaker&nbsp;<input name="include-speaker-5" type="checkbox" class="form-check-input">
+      </label>
+    </div>
+    <input name="speaker-5" type="text" class="form-control col">
+  </div>
+
+  <div class="form-inline my-1">
+    <label for="closing-hymn-number" class="col-2">Closing Hymn</label>
+    <input name="closing-hymn-number" type="number" class="form-control col-1 mr-auto" placeholder="72">
+    <input name="closing-hymn" type="text" class="form-control col-8" placeholder="Praise to the Lord, the Almighty">
+  </div>
+
+  <h3>Announcements</h3>
+  <div class="form-group row">
+    <div class="col">
+      <input name="announcement-1" type="text" class="form-control" placeholder="Some announcement">
+    </div>
+  </div>
+  <div class="form-group row">
+    <div class="col">
+      <input name="announcement-2" type="text" class="form-control" placeholder="Some announcement">
+    </div>
+  </div>
+  <div class="form-group row">
+    <div class="col">
+      <input name="announcement-3" type="text" class="form-control" placeholder="Some announcement">
+    </div>
+  </div>
+  <div class="form-group row">
+    <div class="col">
+      <input name="announcement-4" type="text" class="form-control" placeholder="Some announcement">
+    </div>
+  </div>
+  <div class="form-group row">
+    <div class="col">
+      <input name="announcement-5" type="text" class="form-control" placeholder="Some announcement">
+    </div>
+  </div>
+
+  <h3>Calendar Items</h3>
+  <div class="form-group row">
+    <div class="col-2 mr-auto">
+      <input name="calendar-date-1" type="text" class="form-control" placeholder="May 16">
+    </div>
+    <div class="col-9">
+      <input name="calendar-1" type="text" class="form-control" placeholder="Some calendar item">
+    </div>
+  </div>
+  <div class="form-group row">
+    <div class="col-2 mr-auto">
+      <input name="calendar-date-2" type="text" class="form-control" placeholder="May 16">
+    </div>
+    <div class="col-9">
+      <input name="calendar-2" type="text" class="form-control" placeholder="Some calendar item">
+    </div>
+  </div>
+  <div class="form-group row">
+    <div class="col-2 mr-auto">
+      <input name="calendar-date-3" type="text" class="form-control" placeholder="May 16">
+    </div>
+    <div class="col-9">
+      <input name="calendar-3" type="text" class="form-control" placeholder="Some calendar item">
+    </div>
+  </div>
+  <div class="form-group row">
+    <div class="col-2 mr-auto">
+      <input name="calendar-date-4" type="text" class="form-control" placeholder="May 16">
+    </div>
+    <div class="col-9">
+      <input name="calendar-4" type="text" class="form-control" placeholder="Some calendar item">
+    </div>
+  </div>
+  <div class="form-group row">
+    <div class="col-2 mr-auto">
+      <input name="calendar-date-5" type="text" class="form-control" placeholder="May 16">
+    </div>
+    <div class="col-9">
+      <input name="calendar-5" type="text" class="form-control" placeholder="Some calendar item">
+    </div>
+  </div>
+
+  <h3>Contact Information</h3>
+  <h5>Executive Secretary</h5>
+  <small class="text-muted">Person people should call for an appointment with the bishop.</small>
+  <div class="form-inline my-1 row">
+    <div class="form-group col-6 row">
+      <label class="col-form-label col-2 mr-1">Name</label>
+      <input type="text" name="exec-sec-name" class="form-control col" placeholder="Exec. Secretary">
+    </div>
+    <div class="form-group col-6 row">
+      <label class="col-form-label col-2 mr-1">Number</label>
+      <input type="tel" name="exec-sec-number" class="form-control col" placeholder="(123) 456-7890">
+    </div>
+  </div>
+
+  <h5>Communications Specialist</h5>
+  <small class="text-muted">Person responsible for making the ward bulletin</small>
+  <div class="form-inline my-1 row">
+    <div class="form-group col-6 row">
+      <label class="col-form-label col-2 mr-1">Name</label>
+      <input type="text" name="comm-spec-name" class="form-control col" placeholder="Communications Specialist">
+    </div>
+    <div class="form-group col-6 row">
+      <label class="col-form-label col-2 mr-1">Number</label>
+      <input type="tel" name="comm-spec-number" class="form-control col" placeholder="(123) 456-7890">
+    </div>
+  </div>
+
+</form>
 
 @@ index.html.ep
 % layout 'default';
@@ -22,6 +232,16 @@ To learn more, you can browse through the documentation
 @@ layouts/default.html.ep
 <!DOCTYPE html>
 <html>
-  <head><title><%= title %></title></head>
-  <body><%= content %></body>
+  <head>
+    <title><%= title %></title>
+    <script src="https://code.jquery.com/jquery-3.2.1.slim.min.js" integrity="sha384-KJ3o2DKtIkvYIK3UENzmM7KCkRr/rE9/Qpg6aAZGJwFDMVNA/GpGFF93hXpG5KkN" crossorigin="anonymous"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/popper.js/1.12.3/umd/popper.min.js" integrity="sha384-vFJXuSJphROIrBnz7yo7oB41mKfc8JzQZiCq4NCceLEaO4IHwicKwpJf9c9IpFgh" crossorigin="anonymous"></script>
+    <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/4.0.0-beta.2/css/bootstrap.min.css" integrity="sha384-PsH8R72JQ3SOdhVi3uxftmaW6Vc51MKb0q5P2rRUpPvrszuE4W1povHYgTpBfshb" crossorigin="anonymous">
+    <script src="https://maxcdn.bootstrapcdn.com/bootstrap/4.0.0-beta.2/js/bootstrap.min.js" integrity="sha384-alpBpkh1PFOepccYVYDB4do5UnbKysX5WZXm3XxPqe5iKTfUKjNkCk9SaVuEZflJ" crossorigin="anonymous"></script>
+  </head>
+  <body>
+    <div class="container">
+      <%= content %>
+    </div>
+  </body>
 </html>
