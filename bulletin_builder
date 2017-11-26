@@ -1,6 +1,9 @@
 #!/usr/bin/env perl
 use Mojolicious::Lite;
 
+use Mojo::File;
+use Data::Dumper;
+
 # Documentation browser under "/perldoc"
 plugin 'PODRenderer';
 
@@ -9,13 +12,183 @@ get '/' => sub {
   $c->render(template => 'index');
 };
 
+get '/dl/:ext' => sub {
+    my $c = shift;
+    if ($c->stash('ext') eq 'pdf') {
+	$c->res->headers->content_disposition('attachment; filename=bulletin.pdf;');
+	$c->reply->static('bulletin.pdf');
+    }
+    elsif ($c->stash('ext') eq 'tex') {
+	$c->res->headers->content_disposition('attachment; filename=bulletin.tex;');
+	$c->reply->static('bulletin.tex');
+    }
+    else {
+	$c->render(status => 404);
+    }
+};
+
 get '/builder' => sub {
   my $c = shift;
   $c->render(template => 'builder');
 };
 
+post '/build-bulletin' => sub {
+    my $c = shift;
+
+    my @fields = qw(meeting_type date conducting presiding chorister pianist invocation benediction opening_hymn_number opening_hymn sacrament_hymn_number sacrament_hymn include_speaker_1 speaker_1 include_speaker_2 speaker_2 include_speaker_3 speaker_3 include_rest_hymn rest_hymn_number rest_hymn include_musical_number musical_number musical_number_player include_speaker_4 speaker_4 include_speaker_5 speaker_5 closing_hymn_number closing_hymn announcement_1 announcement_2 announcement_3 announcement_4 announcement_5 calendar_date_1 calendar_1 calendar_date_2 calendar_2 calendar_date_3 calendar_3 calendar_date_4 calendar_4 calendar_date_5 calendar_5 exec_sec_name exec_sec_number comm_spec_name comm_spec_number);
+
+    for my $field (@fields) {
+	$c->stash($field => $c->param($field));
+    }
+
+    my @cal = ();
+    my @ann = ();
+    for my $i (1..5) {
+	push @cal, [$c->param("calendar_date_$i"), $c->param("calendar_$i")],
+	  if $c->param("calendar_$i");
+	push @ann, $c->param("announcement_$i")
+	  if $c->param("announcement_$i");
+    }
+    $c->stash(cal => \@cal);
+    $c->stash(ann => \@ann);
+
+    my $core = $c->render_to_string(template => 'core_bulletin');
+
+    $c->app->log->debug($core);
+
+    my $full_latex = $c->render_to_string(template => 'full_bulletin', core => $core);
+
+    my $f = Mojo::File->new('public/bulletin.tex');
+    $f->spurt($full_latex);
+
+    system('cd public; xelatex bulletin.tex');
+
+    $c->render(template => 'download_page');
+};
+
 app->start;
 __DATA__
+
+@@ download_page.html.ep
+% layout 'default';
+% title 'Download Formatted Bulletin';
+
+<a class="btn btn-lg btn-primary" href="/dl/pdf">Download PDF</a>
+<a class="btn btn-lg btn-success" href="/dl/tex">Download TeX</a>
+
+@@ core_bulletin.html.ep
+
+\begin{center}
+  {\huge \textsc{<%== $meeting_type %>}}\\[0.2em]
+  {\LARGE Provo YSA 82\textsuperscript{nd} Ward}\\[0.3em]
+  {\Large <%== $date %>}
+\end{center}
+
+\vfill
+
+\large
+
+Presiding{\dotfill}<%== $presiding %>\\\\
+Conducting{\dotfill}<%== $conducting %>
+
+Chorister{\dotfill}<%== $chorister %> \\\
+Pianist{\dotfill}<%== $pianist %>
+
+\vfill
+
+\begin{center}
+  {\Large Program}
+\end{center}
+
+Opening Hymn{\dotfill}<%== $opening_hymn_number %> \textit{<%== $opening_hymn %>} \\\
+Invocation{\dotfill}<%== $invocation %>
+
+\begin{center}
+  Ward/Stake Business
+\end{center}
+
+Sacrament Hymn{\dotfill}<%== $sacrament_hymn_number %> \textit{<%== $sacrament_hymn %>}
+
+\begin{center}
+  \textsc{Administration of the Sacrament}
+\end{center}
+
+<% if ($include_speaker_1) { =%>\
+Speaker{\dotfill}<%== $speaker_1 %> \\\
+<% } if ($include_speaker_2) { %>\
+Speaker{\dotfill}<%== $speaker_2 %> \\\
+<% } if ($include_speaker_3) { %>\
+Speaker{\dotfill}<%== $speaker_3 %> \\\
+<% } if ($include_musical_number) { %>
+Musical Number{\dotfill}\textit{<%== $musical_number %>}{\dotfill}<%== $musical_number_player %> \\\
+<% } if ($include_rest_hymn) { %>
+Rest Hymn{\dotfill}<%== $rest_hymn_number %> \textit{<%== $rest_hymn %>} \\\
+<% }if ($include_speaker_4) { %>
+Speaker{\dotfill}<%== $speaker_4 %> \\\
+<% } if ($include_speaker_5) { %>\
+Speaker{\dotfill}<%== $speaker_5 %>
+<% } %>\
+
+Closing Hymn{\dotfill}<%== $closing_hymn_number %> \textit{<%== $closing_hymn %>} \\\
+Benediction{\dotfill}<%== $benediction %>
+
+\pagebreak
+
+\begin{center}
+  {\LARGE Announcements}\\[2em]
+  \hrule
+\end{center}
+
+\begin{itemize}
+  <% for my $i (@$ann) { %>
+    \item <%== $i %>
+  <% } %>
+\end{itemize}
+
+\begin{center}
+  {\LARGE Calendar}\\[2em]
+  \hrule
+\end{center}
+
+\begin{description}
+  <% for my $i (@$cal) { %>
+    \item [<%== $$i[0] %>] <%== $$i[1] %>
+  <% } %>
+\end{description}
+
+\vfill
+
+\normalsize
+
+For appointments with the bishop, please contact <%== $exec_sec_name %> at \mbox{<%== $exec_sec_number %>}.\\*
+For corrections to announcements, contact <%== $comm_spec_name %> at \mbox{<%==$comm_spec_number %>}.
+
+
+@@ full_bulletin.html.ep
+
+\documentclass[14pt, letterpaper]{extarticle}
+
+\setlength{\parindent}{0cm}
+\setlength{\parskip}{1em}
+\pagenumbering{gobble}
+\usepackage{fullpage,tabularx,graphicx,type1cm,hyperref}
+\usepackage[inner=2cm,outer=2cm,top=0.5cm,bottom=0.5cm]{geometry}
+
+\usepackage{fontspec}
+\setmainfont{Hoefler Text}
+
+\newcolumntype{R}{>{\raggedleft\arraybackslash}X}
+
+\begin{document}
+
+<%== $core %>
+
+\pagebreak
+
+<%== $core %>
+
+\end{document}
+
 
 @@ builder.html.ep
 % layout 'default';
@@ -23,14 +196,20 @@ __DATA__
 
 <h1>Program Builder</h1>
 
-<form action="/build-bulletin" class="mb-3">
+<form action="/build-bulletin" class="mb-3" method="POST">
   <h3>Meta Data</h3>
-  <div class="form-group">
-    <label>Meeting Type</label>
-    <select name="meeting-type" class="custom-select">
-      <option value="Sacrament Meeting">Sacrament Meeting</option>
-      <option value="Fast and Testimony Meeting">Fast and Testimony Meeting</option>
-    </select>
+  <div class="row">
+    <div class="form-group col">
+      <label class="col-form-label">Meeting Type</label>
+      <select name="meeting_type" class="custom-select">
+	<option value="Sacrament Meeting">Sacrament Meeting</option>
+	<option value="Fast and Testimony Meeting">Fast and Testimony Meeting</option>
+      </select>
+    </div>
+    <div class="form-inline col row">
+      <label class="col-form-label col-1 mr-1">Date</label>
+      <input type="text" name="date" class="form-control col" placeholder="4 November 2017">
+    </div>
   </div>
 
   <div class="form-group">
@@ -42,154 +221,158 @@ __DATA__
     <hr>
     <label for="chorister">Chorister</label>
     <input name="chorister" type="text" class="form-control" placeholder="Jessie Knight">
-    <label for="presiding">Pianist</label>
-    <input name="presiding" type="text" class="form-control" placeholder="Hyrum Page">
+    <label for="pianist">Pianist</label>
+    <input name="pianist" type="text" class="form-control" placeholder="Hyrum Page">
+    <label for="invocation">Invocation</label>
+    <input name="invocation" type="text" class="form-control" value="(By invitation)">
+    <label for="benediction">Benediction</label>
+    <input name="benediction" type="text" class="form-control" value="(By invitation)">
   </div>
 
   <h3>Program</h3>
 
   <div class="form-inline my-1">
-    <label for="opening-hymn-number" class="col-2">Opening Hymn</label>
-    <input name="opening-hymn-number" type="number" class="form-control col-1 mr-auto" placeholder="68">
-    <input name="opening-hymn" type="text" class="form-control col-8" placeholder="A Mighty Fortress Is Our God">
+    <label for="opening_hymn_number" class="col-2">Opening Hymn</label>
+    <input name="opening_hymn_number" type="number" class="form-control col-1 mr-auto" placeholder="68">
+    <input name="opening_hymn" type="text" class="form-control col-8" placeholder="A Mighty Fortress Is Our God">
   </div>
 
   <div class="form-inline my-1">
-    <label for="sacrament-hymn-number" class="col-2">Sacrament Hymn</label>
-    <input name="sacrament-hymn-number" type="number" class="form-control col-1 mr-auto" placeholder="197">
-    <input name="sacrament-hymn" type="text" class="form-control col-8" placeholder="O Savior, Thou Who Wearest a Crown">
+    <label for="sacrament_hymn_number" class="col-2">Sacrament Hymn</label>
+    <input name="sacrament_hymn_number" type="number" class="form-control col-1 mr-auto" placeholder="197">
+    <input name="sacrament_hymn" type="text" class="form-control col-8" placeholder="O Savior, Thou Who Wearest a Crown">
   </div>
 
   <div class="form-inline my-1">
     <div class="form-check col-auto">
       <label class="form-check-label">
-	Display Speaker&nbsp;<input name="include-speaker-1" type="checkbox" class="form-check-input">
+	Display Speaker&nbsp;<input name="include_speaker_1" type="checkbox" class="form-check-input">
       </label>
     </div>
-    <input name="speaker-1" type="text" class="form-control col">
+    <input name="speaker_1" type="text" class="form-control col">
   </div>
   <div class="form-inline my-1">
     <div class="form-check col-auto">
       <label class="form-check-label">
-	Display Speaker&nbsp;<input name="include-speaker-2" type="checkbox" class="form-check-input">
+	Display Speaker&nbsp;<input name="include_speaker_2" type="checkbox" class="form-check-input">
       </label>
     </div>
-    <input name="speaker-2" type="text" class="form-control col">
+    <input name="speaker_2" type="text" class="form-control col">
   </div>
   <div class="form-inline my-1">
     <div class="form-check col-auto">
       <label class="form-check-label">
-	Display Speaker&nbsp;<input name="include-speaker-3" type="checkbox" class="form-check-input">
+	Display Speaker&nbsp;<input name="include_speaker_3" type="checkbox" class="form-check-input">
       </label>
     </div>
-    <input name="speaker-3" type="text" class="form-control col">
+    <input name="speaker_3" type="text" class="form-control col">
   </div>
 
   <div class="form-inline my-1">
-    <label for="rest-hymn-number" class="form-check-label col-2">
-      Rest Hymn&nbsp;<input name="include-rest-hymn" type="checkbox" class="form-check-input">
+    <label for="rest_hymn_number" class="form-check-label col-2">
+      Rest Hymn&nbsp;<input name="include_rest_hymn" type="checkbox" class="form-check-input">
     </label>
-    <input name="rest-hymn-number" type="number" class="form-control col-1 mr-auto" placeholder="">
-    <input name="rest-hymn" type="text" class="form-control col-8" placeholder="">
+    <input name="rest_hymn_number" type="number" class="form-control col-1 mr-auto" placeholder="">
+    <input name="rest_hymn" type="text" class="form-control col-8" placeholder="">
   </div>
 
   <div class="form-inline my-1">
-    <label for="musical-number" class="form-check-label col-2">
-      Musical Number&nbsp;<input name="include-musical-number" type="checkbox" class="form-check-input">
+    <label for="musical_number" class="form-check-label col-2">
+      Musical Number&nbsp;<input name="include_musical_number" type="checkbox" class="form-check-input">
     </label>
-    <input name="musical-number" type="text" class="form-control col-4 mr-auto" placeholder="(Song title here)">
-    <input name="musical-number-player" type="text" class="form-control col-5" placeholder="(Musician name here)">
+    <input name="musical_number" type="text" class="form-control col-4 mr-auto" placeholder="(Song title here)">
+    <input name="musical_number_player" type="text" class="form-control col-5" placeholder="(Musician name here)">
   </div>
 
   <div class="form-inline my-1">
     <div class="form-check col-auto">
       <label class="form-check-label">
-	Display Speaker&nbsp;<input name="include-speaker-4" type="checkbox" class="form-check-input">
+	Display Speaker&nbsp;<input name="include_speaker_4" type="checkbox" class="form-check-input">
       </label>
     </div>
-    <input name="speaker-4" type="text" class="form-control col">
+    <input name="speaker_4" type="text" class="form-control col">
   </div>
   <div class="form-inline my-1">
     <div class="form-check col-auto">
       <label class="form-check-label">
-	Display Speaker&nbsp;<input name="include-speaker-5" type="checkbox" class="form-check-input">
+	Display Speaker&nbsp;<input name="include_speaker_5" type="checkbox" class="form-check-input">
       </label>
     </div>
-    <input name="speaker-5" type="text" class="form-control col">
+    <input name="speaker_5" type="text" class="form-control col">
   </div>
 
   <div class="form-inline my-1">
     <label for="closing-hymn-number" class="col-2">Closing Hymn</label>
-    <input name="closing-hymn-number" type="number" class="form-control col-1 mr-auto" placeholder="72">
-    <input name="closing-hymn" type="text" class="form-control col-8" placeholder="Praise to the Lord, the Almighty">
+    <input name="closing_hymn_number" type="number" class="form-control col-1 mr-auto" placeholder="72">
+    <input name="closing_hymn" type="text" class="form-control col-8" placeholder="Praise to the Lord, the Almighty">
   </div>
 
   <h3>Announcements</h3>
   <div class="form-group row">
     <div class="col">
-      <input name="announcement-1" type="text" class="form-control" placeholder="Some announcement">
+      <input name="announcement_1" type="text" class="form-control" placeholder="Some announcement">
     </div>
   </div>
   <div class="form-group row">
     <div class="col">
-      <input name="announcement-2" type="text" class="form-control" placeholder="Some announcement">
+      <input name="announcement_2" type="text" class="form-control" placeholder="Some announcement">
     </div>
   </div>
   <div class="form-group row">
     <div class="col">
-      <input name="announcement-3" type="text" class="form-control" placeholder="Some announcement">
+      <input name="announcement_3" type="text" class="form-control" placeholder="Some announcement">
     </div>
   </div>
   <div class="form-group row">
     <div class="col">
-      <input name="announcement-4" type="text" class="form-control" placeholder="Some announcement">
+      <input name="announcement_4" type="text" class="form-control" placeholder="Some announcement">
     </div>
   </div>
   <div class="form-group row">
     <div class="col">
-      <input name="announcement-5" type="text" class="form-control" placeholder="Some announcement">
+      <input name="announcement_5" type="text" class="form-control" placeholder="Some announcement">
     </div>
   </div>
 
   <h3>Calendar Items</h3>
   <div class="form-group row">
     <div class="col-2 mr-auto">
-      <input name="calendar-date-1" type="text" class="form-control" placeholder="May 16">
+      <input name="calendar_date_1" type="text" class="form-control" placeholder="May 16">
     </div>
     <div class="col-9">
-      <input name="calendar-1" type="text" class="form-control" placeholder="Some calendar item">
+      <input name="calendar_1" type="text" class="form-control" placeholder="Some calendar item">
     </div>
   </div>
   <div class="form-group row">
     <div class="col-2 mr-auto">
-      <input name="calendar-date-2" type="text" class="form-control" placeholder="May 16">
+      <input name="calendar_date_2" type="text" class="form-control" placeholder="May 16">
     </div>
     <div class="col-9">
-      <input name="calendar-2" type="text" class="form-control" placeholder="Some calendar item">
+      <input name="calendar_2" type="text" class="form-control" placeholder="Some calendar item">
     </div>
   </div>
   <div class="form-group row">
     <div class="col-2 mr-auto">
-      <input name="calendar-date-3" type="text" class="form-control" placeholder="May 16">
+      <input name="calendar_date_3" type="text" class="form-control" placeholder="May 16">
     </div>
     <div class="col-9">
-      <input name="calendar-3" type="text" class="form-control" placeholder="Some calendar item">
+      <input name="calendar_3" type="text" class="form-control" placeholder="Some calendar item">
     </div>
   </div>
   <div class="form-group row">
     <div class="col-2 mr-auto">
-      <input name="calendar-date-4" type="text" class="form-control" placeholder="May 16">
+      <input name="calendar_date_4" type="text" class="form-control" placeholder="May 16">
     </div>
     <div class="col-9">
-      <input name="calendar-4" type="text" class="form-control" placeholder="Some calendar item">
+      <input name="calendar_4" type="text" class="form-control" placeholder="Some calendar item">
     </div>
   </div>
   <div class="form-group row">
     <div class="col-2 mr-auto">
-      <input name="calendar-date-5" type="text" class="form-control" placeholder="May 16">
+      <input name="calendar_date_5" type="text" class="form-control" placeholder="May 16">
     </div>
     <div class="col-9">
-      <input name="calendar-5" type="text" class="form-control" placeholder="Some calendar item">
+      <input name="calendar_5" type="text" class="form-control" placeholder="Some calendar item">
     </div>
   </div>
 
@@ -199,11 +382,11 @@ __DATA__
   <div class="form-inline my-1 row">
     <div class="form-group col-6 row">
       <label class="col-form-label col-2 mr-1">Name</label>
-      <input type="text" name="exec-sec-name" class="form-control col" placeholder="Exec. Secretary">
+      <input type="text" name="exec_sec_name" class="form-control col" placeholder="Exec. Secretary">
     </div>
     <div class="form-group col-6 row">
       <label class="col-form-label col-2 mr-1">Number</label>
-      <input type="tel" name="exec-sec-number" class="form-control col" placeholder="(123) 456-7890">
+      <input type="tel" name="exec_sec_number" class="form-control col" placeholder="(123) 456-7890">
     </div>
   </div>
 
@@ -212,13 +395,15 @@ __DATA__
   <div class="form-inline my-1 row">
     <div class="form-group col-6 row">
       <label class="col-form-label col-2 mr-1">Name</label>
-      <input type="text" name="comm-spec-name" class="form-control col" placeholder="Communications Specialist">
+      <input type="text" name="comm_spec_name" class="form-control col" placeholder="Communications Specialist">
     </div>
     <div class="form-group col-6 row">
       <label class="col-form-label col-2 mr-1">Number</label>
-      <input type="tel" name="comm-spec-number" class="form-control col" placeholder="(123) 456-7890">
+      <input type="tel" name="comm_spec_number" class="form-control col" placeholder="(123) 456-7890">
     </div>
   </div>
+
+  <button class="btn btn-primary" on-click="submit()">Submit</button>
 
 </form>
 
