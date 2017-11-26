@@ -9,7 +9,7 @@ plugin 'PODRenderer';
 
 get '/' => sub {
   my $c = shift;
-  $c->render(template => 'index');
+  $c->render(template => 'builder');
 };
 
 get '/dl/:ext' => sub {
@@ -35,7 +35,7 @@ get '/builder' => sub {
 post '/build-bulletin' => sub {
     my $c = shift;
 
-    my @fields = qw(meeting_type date conducting presiding chorister pianist invocation benediction opening_hymn_number opening_hymn sacrament_hymn_number sacrament_hymn include_speaker_1 speaker_1 include_speaker_2 speaker_2 include_speaker_3 speaker_3 include_rest_hymn rest_hymn_number rest_hymn include_musical_number musical_number musical_number_player include_speaker_4 speaker_4 include_speaker_5 speaker_5 closing_hymn_number closing_hymn announcement_1 announcement_2 announcement_3 announcement_4 announcement_5 calendar_date_1 calendar_1 calendar_date_2 calendar_2 calendar_date_3 calendar_3 calendar_date_4 calendar_4 calendar_date_5 calendar_5 exec_sec_name exec_sec_number comm_spec_name comm_spec_number);
+    my @fields = qw(meeting_type date conducting presiding chorister pianist invocation benediction opening_hymn_number opening_hymn sacrament_hymn_number sacrament_hymn include_speaker_1 speaker_1 include_speaker_2 speaker_2 include_speaker_3 speaker_3 include_rest_hymn rest_hymn_number rest_hymn include_musical_number musical_number musical_number_player include_speaker_4 speaker_4 include_speaker_5 speaker_5 closing_hymn_number closing_hymn announcement_1 announcement_2 announcement_3 announcement_4 announcement_5 calendar_date_1 calendar_1 calendar_date_2 calendar_2 calendar_date_3 calendar_3 calendar_date_4 calendar_4 calendar_date_5 calendar_5 calendar_date_6 calendar_6 calendar_date_7 calendar_7 exec_sec_name exec_sec_number comm_spec_name comm_spec_number);
 
     for my $field (@fields) {
 	$c->stash($field => $c->param($field));
@@ -43,9 +43,11 @@ post '/build-bulletin' => sub {
 
     my @cal = ();
     my @ann = ();
-    for my $i (1..5) {
+    for my $i (1..7) {
 	push @cal, [$c->param("calendar_date_$i"), $c->param("calendar_$i")],
 	  if $c->param("calendar_$i");
+    }
+    for my $i (1..5) {
 	push @ann, $c->param("announcement_$i")
 	  if $c->param("announcement_$i");
     }
@@ -373,6 +375,22 @@ For corrections to announcements, contact <%== $comm_spec_name %> at \mbox{<%==$
     </div>
     <div class="col-9">
       <input name="calendar_5" type="text" class="form-control" placeholder="Some calendar item">
+    </div>
+  </div>
+  <div class="form-group row">
+    <div class="col-2 mr-auto">
+      <input name="calendar_date_6" type="text" class="form-control" placeholder="May 16">
+    </div>
+    <div class="col-9">
+      <input name="calendar_6" type="text" class="form-control" placeholder="Some calendar item">
+    </div>
+  </div>
+  <div class="form-group row">
+    <div class="col-2 mr-auto">
+      <input name="calendar_date_7" type="text" class="form-control" placeholder="May 16">
+    </div>
+    <div class="col-9">
+      <input name="calendar_7" type="text" class="form-control" placeholder="Some calendar item">
     </div>
   </div>
 
