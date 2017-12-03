@@ -63,7 +63,7 @@ post '/build-bulletin' => sub {
     my $f = Mojo::File->new('public/bulletin.tex');
     $f->spurt($full_latex);
 
-    system('cd public; xelatex bulletin.tex');
+    system('cd public; xelatex -halt-on-error bulletin.tex');
 
     $c->render(template => 'download_page');
 };
@@ -75,8 +75,18 @@ __DATA__
 % layout 'default';
 % title 'Download Formatted Bulletin';
 
-<a class="btn btn-lg btn-primary" href="/dl/pdf">Download PDF</a>
-<a class="btn btn-lg btn-success" href="/dl/tex">Download TeX</a>
+<h1>Download Bulletin</h1>
+<div class="row justify-content-around">
+    <div class="col col-md-5">
+	<a class="btn btn-block btn-lg btn-primary" href="/dl/pdf">Download PDF</a>
+    </div>
+    <div class="col col-md-5">
+	<a class="btn btn-block btn-lg btn-success" href="/dl/tex">Download LaTeX</a>
+	<p class="text-muted mt-2">
+	    "<a href="https://en.wikipedia.org/wiki/LaTeX">LaTeX</a>" is a document layout language. This is the intermediate form of the bulletin. You can download this file, edit it, and then compile it into a PDF with the command <code>$&nbsp;xelatex&nbsp;bulletin.tex</code>. (Assuming you have <code>xelatex</code> and the proper fonts installed.) For help learning LaTeX, go <a href="https://en.wikibooks.org/wiki/LaTeX">here</a>.
+	</p>
+    </div>
+</div>
 
 @@ core_bulletin.html.ep
 
@@ -177,6 +187,7 @@ For corrections to announcements, contact <%== $comm_spec_name %> at \mbox{<%==$
 \setlength{\parindent}{0cm}
 \setlength{\parskip}{1em}
 \pagenumbering{gobble}
+
 \usepackage{fullpage,tabularx,graphicx,type1cm,hyperref}
 \usepackage[inner=2cm,outer=2cm,top=0.5cm,bottom=0.5cm]{geometry}
 
@@ -200,53 +211,53 @@ For corrections to announcements, contact <%== $comm_spec_name %> at \mbox{<%==$
 % layout 'default';
 % title 'Bulletin Builder';
 
-<h1>Program Builder</h1>
+<h1>Bulletin Builder</h1>
 
-<form action="/build-bulletin" class="mb-3" method="POST">
+<form action="/build-bulletin" class="mb-3" method="POST" autocomplete="on">
   <h3>Meta Data</h3>
   <div class="row">
     <div class="form-group col">
-      <label class="col-form-label">Meeting Type</label>
+      <label>Meeting Type</label><br>
       <select name="meeting_type" class="custom-select">
 	<option value="Sacrament Meeting">Sacrament Meeting</option>
 	<option value="Fast and Testimony Meeting">Fast and Testimony Meeting</option>
       </select>
     </div>
-    <div class="form-inline col row">
-      <label class="col-form-label col-1 mr-1">Date</label>
-      <input type="text" name="date" class="form-control col" placeholder="4 November 2017">
+    <div class="form-group col">
+      <label>Date</label>
+      <input type="text" name="date" class="form-control" placeholder="4 November 2017" required>
     </div>
   </div>
 
   <div class="form-group">
     <h3>Leading</h3>
     <label for="conducting">Conducting</label>
-    <input name="conducting" type="text" class="form-control" placeholder="Bishop Anson">
+    <input name="conducting" type="text" class="form-control" placeholder="Bishop Anson" required>
     <label for="presiding">Presiding</label>
-    <input name="presiding" type="text" class="form-control" placeholder="Bishop Anson">
+    <input name="presiding" type="text" class="form-control" placeholder="Bishop Anson" required>
     <hr>
     <label for="chorister">Chorister</label>
-    <input name="chorister" type="text" class="form-control" placeholder="Jessie Knight">
+    <input name="chorister" type="text" class="form-control" placeholder="Jessie Knight" required>
     <label for="pianist">Pianist</label>
-    <input name="pianist" type="text" class="form-control" placeholder="Hyrum Page">
+    <input name="pianist" type="text" class="form-control" placeholder="Hyrum Page" required>
     <label for="invocation">Invocation</label>
-    <input name="invocation" type="text" class="form-control" value="(By invitation)">
+    <input name="invocation" type="text" class="form-control" value="(By invitation)" required>
     <label for="benediction">Benediction</label>
-    <input name="benediction" type="text" class="form-control" value="(By invitation)">
+    <input name="benediction" type="text" class="form-control" value="(By invitation)" required>
   </div>
 
   <h3>Program</h3>
 
   <div class="form-inline my-1">
     <label for="opening_hymn_number" class="col-2">Opening Hymn</label>
-    <input name="opening_hymn_number" type="number" class="form-control col-2 col-md-1 mr-auto" placeholder="68">
-    <input name="opening_hymn" type="text" class="form-control col-7 col-md-8" placeholder="A Mighty Fortress Is Our God">
+    <input name="opening_hymn_number" type="number" class="form-control col-2 col-md-1 mr-auto" placeholder="68" required>
+    <input name="opening_hymn" type="text" class="form-control col-7 col-md-8" placeholder="A Mighty Fortress Is Our God" required>
   </div>
 
   <div class="form-inline my-1">
     <label for="sacrament_hymn_number" class="col-2">Sacrament Hymn</label>
-    <input name="sacrament_hymn_number" type="number" class="form-control col-2 col-md-1 mr-auto" placeholder="197">
-    <input name="sacrament_hymn" type="text" class="form-control col-7 col-md-7" placeholder="O Savior, Thou Who Wearest a Crown">
+    <input name="sacrament_hymn_number" type="number" class="form-control col-2 col-md-1 mr-auto" placeholder="197" required>
+    <input name="sacrament_hymn" type="text" class="form-control col-7 col-md-8" placeholder="O Savior, Thou Who Wearest a Crown" required>
   </div>
 
   <div class="form-inline my-1">
@@ -310,13 +321,13 @@ For corrections to announcements, contact <%== $comm_spec_name %> at \mbox{<%==$
   <div class="form-inline my-1">
     <label for="closing-hymn-number" class="col-2">Closing Hymn</label>
     <input name="closing_hymn_number" type="number" class="form-control col-2 col-md-1 mr-auto" placeholder="72">
-    <input name="closing_hymn" type="text" class="form-control col-7 col-md-8" placeholder="Praise to the Lord, the Almighty">
+    <input name="closing_hymn" type="text" class="form-control col-7 col-md-8" placeholder="Praise to the Lord, the Almighty" required>
   </div>
 
   <h3>Announcements</h3>
   <div class="form-group row">
     <div class="col">
-      <input name="announcement_1" type="text" class="form-control" placeholder="Some announcement">
+      <input name="announcement_1" type="text" class="form-control" placeholder="Some announcement" required>
     </div>
   </div>
   <div class="form-group row">
@@ -343,10 +354,10 @@ For corrections to announcements, contact <%== $comm_spec_name %> at \mbox{<%==$
   <h3>Calendar Items</h3>
   <div class="form-group row">
     <div class="col-3 col-md-2 mr-auto">
-      <input name="calendar_date_1" type="text" class="form-control" placeholder="May 16">
+      <input name="calendar_date_1" type="text" class="form-control" placeholder="May 16" required>
     </div>
     <div class="col-8 col-md-9">
-      <input name="calendar_1" type="text" class="form-control" placeholder="Some calendar item">
+      <input name="calendar_1" type="text" class="form-control" placeholder="Some calendar item" required>
     </div>
   </div>
   <div class="form-group row">
@@ -404,7 +415,7 @@ For corrections to announcements, contact <%== $comm_spec_name %> at \mbox{<%==$
   <div class="form-inline my-1 row">
     <div class="form-group col-6 row">
       <label class="col-form-label col-2 mr-1">Name</label>
-      <input type="text" name="exec_sec_name" class="form-control col" placeholder="Exec. Secretary">
+      <input type="text" name="exec_sec_name" class="form-control col" placeholder="Karl Mäser">
     </div>
     <div class="form-group col-6 row">
       <label class="col-form-label col-2 mr-1">Number</label>
@@ -417,7 +428,7 @@ For corrections to announcements, contact <%== $comm_spec_name %> at \mbox{<%==$
   <div class="form-inline my-1 row">
     <div class="form-group col-6 row">
       <label class="col-form-label col-2 mr-1">Name</label>
-      <input type="text" name="comm_spec_name" class="form-control col" placeholder="Communications Specialist">
+      <input type="text" name="comm_spec_name" class="form-control col" placeholder="James Talmage">
     </div>
     <div class="form-group col-6 row">
       <label class="col-form-label col-2 mr-1">Number</label>
