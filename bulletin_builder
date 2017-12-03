@@ -115,7 +115,11 @@ Sacrament Hymn{\dotfill}<%== $sacrament_hymn_number %> \textit{<%== $sacrament_h
   \textsc{Administration of the Sacrament}
 \end{center}
 
-<% if ($include_speaker_1) { =%>\
+<% if ($meeting_type == "Fast and Testimony Meeting") { =%>\
+\begin{center}
+  \textit{Bearing of Testimonies}
+\end{center}
+<% } if ($include_speaker_1) { =%>\
 Speaker{\dotfill}<%== $speaker_1 %> \\\
 <% } if ($include_speaker_2) { %>\
 Speaker{\dotfill}<%== $speaker_2 %> \\\
@@ -235,14 +239,14 @@ For corrections to announcements, contact <%== $comm_spec_name %> at \mbox{<%==$
 
   <div class="form-inline my-1">
     <label for="opening_hymn_number" class="col-2">Opening Hymn</label>
-    <input name="opening_hymn_number" type="number" class="form-control col-1 mr-auto" placeholder="68">
-    <input name="opening_hymn" type="text" class="form-control col-8" placeholder="A Mighty Fortress Is Our God">
+    <input name="opening_hymn_number" type="number" class="form-control col-2 col-md-1 mr-auto" placeholder="68">
+    <input name="opening_hymn" type="text" class="form-control col-7 col-md-8" placeholder="A Mighty Fortress Is Our God">
   </div>
 
   <div class="form-inline my-1">
     <label for="sacrament_hymn_number" class="col-2">Sacrament Hymn</label>
-    <input name="sacrament_hymn_number" type="number" class="form-control col-1 mr-auto" placeholder="197">
-    <input name="sacrament_hymn" type="text" class="form-control col-8" placeholder="O Savior, Thou Who Wearest a Crown">
+    <input name="sacrament_hymn_number" type="number" class="form-control col-2 col-md-1 mr-auto" placeholder="197">
+    <input name="sacrament_hymn" type="text" class="form-control col-7 col-md-7" placeholder="O Savior, Thou Who Wearest a Crown">
   </div>
 
   <div class="form-inline my-1">
@@ -274,8 +278,8 @@ For corrections to announcements, contact <%== $comm_spec_name %> at \mbox{<%==$
     <label for="rest_hymn_number" class="form-check-label col-2">
       Rest Hymn&nbsp;<input name="include_rest_hymn" type="checkbox" class="form-check-input">
     </label>
-    <input name="rest_hymn_number" type="number" class="form-control col-1 mr-auto" placeholder="">
-    <input name="rest_hymn" type="text" class="form-control col-8" placeholder="">
+    <input name="rest_hymn_number" type="number" class="form-control col-2 col-md-1 mr-auto" placeholder="">
+    <input name="rest_hymn" type="text" class="form-control col-7 col-md-8" placeholder="">
   </div>
 
   <div class="form-inline my-1">
@@ -305,8 +309,8 @@ For corrections to announcements, contact <%== $comm_spec_name %> at \mbox{<%==$
 
   <div class="form-inline my-1">
     <label for="closing-hymn-number" class="col-2">Closing Hymn</label>
-    <input name="closing_hymn_number" type="number" class="form-control col-1 mr-auto" placeholder="72">
-    <input name="closing_hymn" type="text" class="form-control col-8" placeholder="Praise to the Lord, the Almighty">
+    <input name="closing_hymn_number" type="number" class="form-control col-2 col-md-1 mr-auto" placeholder="72">
+    <input name="closing_hymn" type="text" class="form-control col-7 col-md-8" placeholder="Praise to the Lord, the Almighty">
   </div>
 
   <h3>Announcements</h3>
@@ -338,58 +342,58 @@ For corrections to announcements, contact <%== $comm_spec_name %> at \mbox{<%==$
 
   <h3>Calendar Items</h3>
   <div class="form-group row">
-    <div class="col-2 mr-auto">
+    <div class="col-3 col-md-2 mr-auto">
       <input name="calendar_date_1" type="text" class="form-control" placeholder="May 16">
     </div>
-    <div class="col-9">
+    <div class="col-8 col-md-9">
       <input name="calendar_1" type="text" class="form-control" placeholder="Some calendar item">
     </div>
   </div>
   <div class="form-group row">
-    <div class="col-2 mr-auto">
+    <div class="col-3 col-md-2 mr-auto">
       <input name="calendar_date_2" type="text" class="form-control" placeholder="May 16">
     </div>
-    <div class="col-9">
+    <div class="col-8 col-md-9">
       <input name="calendar_2" type="text" class="form-control" placeholder="Some calendar item">
     </div>
   </div>
   <div class="form-group row">
-    <div class="col-2 mr-auto">
+    <div class="col-3 col-md-2 mr-auto">
       <input name="calendar_date_3" type="text" class="form-control" placeholder="May 16">
     </div>
-    <div class="col-9">
+    <div class="col-8 col-md-9">
       <input name="calendar_3" type="text" class="form-control" placeholder="Some calendar item">
     </div>
   </div>
   <div class="form-group row">
-    <div class="col-2 mr-auto">
+    <div class="col-3 col-md-2 mr-auto">
       <input name="calendar_date_4" type="text" class="form-control" placeholder="May 16">
     </div>
-    <div class="col-9">
+    <div class="col-8 col-md-9">
       <input name="calendar_4" type="text" class="form-control" placeholder="Some calendar item">
     </div>
   </div>
   <div class="form-group row">
-    <div class="col-2 mr-auto">
+    <div class="col-3 col-md-2 mr-auto">
       <input name="calendar_date_5" type="text" class="form-control" placeholder="May 16">
     </div>
-    <div class="col-9">
+    <div class="col-8 col-md-9">
       <input name="calendar_5" type="text" class="form-control" placeholder="Some calendar item">
     </div>
   </div>
   <div class="form-group row">
-    <div class="col-2 mr-auto">
+    <div class="col-3 col-md-2 mr-auto">
       <input name="calendar_date_6" type="text" class="form-control" placeholder="May 16">
     </div>
-    <div class="col-9">
+    <div class="col-8 col-md-9">
       <input name="calendar_6" type="text" class="form-control" placeholder="Some calendar item">
     </div>
   </div>
   <div class="form-group row">
-    <div class="col-2 mr-auto">
+    <div class="col-3 col-md-2 mr-auto">
       <input name="calendar_date_7" type="text" class="form-control" placeholder="May 16">
     </div>
-    <div class="col-9">
+    <div class="col-8 col-md-9">
       <input name="calendar_7" type="text" class="form-control" placeholder="Some calendar item">
     </div>
   </div>
